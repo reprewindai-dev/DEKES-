@@ -25,7 +25,11 @@ export async function bingSearch(query: string, opts?: Partial<SourceOrchestrati
   const freshness = opts?.freshness ?? env.SEKED_FRESHNESS;
   const count = opts?.count ?? env.SEKED_MAX_RESULTS_PER_QUERY;
 
+  if (!env.BING_ENDPOINT) throw new Error('BING_ENDPOINT_MISSING');
+  if (!env.BING_API_KEY) throw new Error('BING_API_KEY_MISSING');
+
   const endpoint = env.BING_ENDPOINT.replace(/\/$/, '');
+  const apiKey: string = env.BING_API_KEY;
   const url = new URL(endpoint + '/v7.0/search');
   url.searchParams.set('q', query);
   url.searchParams.set('mkt', market);
@@ -34,7 +38,7 @@ export async function bingSearch(query: string, opts?: Partial<SourceOrchestrati
 
   const res = await fetch(url, {
     headers: {
-      'Ocp-Apim-Subscription-Key': env.BING_API_KEY
+      'Ocp-Apim-Subscription-Key': apiKey
     }
   });
 

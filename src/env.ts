@@ -9,6 +9,9 @@ function emptyToUndefined(value: unknown): unknown {
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
 
+  BING_ENDPOINT: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  BING_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
+
   SERPAPI_API_KEY: z.string().min(1),
   SERPAPI_LOCATION: z.string().optional(),
   SERPAPI_LOCATIONS: z.string().optional(),

@@ -97,7 +97,7 @@ async function main() {
         geoLocation: chosenLocation,
         geoGl: env.SERPAPI_GL,
         geoHl: env.SERPAPI_HL
-      }
+      } as any
     });
 
     const stats = {
@@ -237,7 +237,7 @@ async function main() {
             entityId: entityId ?? null,
             queryId: q.id,
             runId: run.id
-          },
+          } as any,
           update: {
             title: r.title,
             snippet: r.snippet,
@@ -272,7 +272,7 @@ async function main() {
             entityId: entityId ?? null,
             queryId: q.id,
             runId: run.id
-          }
+          } as any
         });
 
         leadCount++;
@@ -285,7 +285,7 @@ async function main() {
           overall.qualified++;
         }
 
-        if (created.status === 'REVIEW') {
+        if ((created.status as any) === 'REVIEW') {
           stats.review++;
           overall.review++;
         }
@@ -547,12 +547,12 @@ function sampleIndex(probs: number[]): number {
 
 async function sanitizeOutreachReadyLeads(): Promise<void> {
   const candidates = await prisma.lead.findMany({
-    where: { status: 'OUTREACH_READY' },
-    select: { id: true, canonicalUrl: true, title: true, snippet: true, intentClass: true, intentConfidence: true }
+    where: { status: 'OUTREACH_READY' as any },
+    select: ({ id: true, canonicalUrl: true, title: true, snippet: true, intentClass: true, intentConfidence: true } as any)
   });
 
-  for (const lead of candidates) {
-    const rej = rejectJobLead({ url: lead.canonicalUrl, title: lead.title ?? undefined, snippet: lead.snippet ?? undefined });
+  for (const lead of candidates as any[]) {
+    const rej = rejectJobLead({ url: String(lead.canonicalUrl), title: lead.title ?? undefined, snippet: lead.snippet ?? undefined });
     if (!rej.rejected) continue;
 
     await prisma.lead.update({
@@ -565,7 +565,7 @@ async function sanitizeOutreachReadyLeads(): Promise<void> {
     });
   }
 
-  for (const lead of candidates) {
+  for (const lead of candidates as any[]) {
     const ok = lead.intentClass === 'BUYER' && (lead.intentConfidence ?? 0) >= 0.45;
     if (ok) continue;
 

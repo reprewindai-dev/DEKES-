@@ -283,7 +283,7 @@ app.post('/outcome', async (req, res) => {
 });
 
 app.get('/api/runs', async (_req, res) => {
-  const runs = await prisma.run.findMany({ orderBy: { createdAt: 'desc' }, take: 50, include: { query: true } });
+  const runs = await prisma.run.findMany({ orderBy: { startedAt: 'desc' }, take: 50, include: { query: true } });
   res.json(runs);
 });
 
