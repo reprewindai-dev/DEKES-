@@ -12,6 +12,15 @@ const envSchema = z.object({
   BING_ENDPOINT: z.preprocess(emptyToUndefined, z.string().url().optional()),
   BING_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
 
+  APIFY_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
+
+  SEARCH_PROVIDER: z.preprocess(emptyToUndefined, z.string().optional()),
+  SEARCH_FALLBACK: z.preprocess(emptyToUndefined, z.string().optional()),
+
+  GROQ_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
+  GROQ_MODEL_FAST: z.string().default('llama-3.1-8b-instant'),
+  GROQ_MODEL_SMART: z.string().default('llama-3.3-70b-versatile'),
+
   SERPAPI_API_KEY: z.string().min(1),
   SERPAPI_LOCATION: z.string().optional(),
   SERPAPI_LOCATIONS: z.string().optional(),

@@ -1,3 +1,6 @@
+import { env } from '../src/env.js';
+import { groqClassifyIntent } from './groq-intent.js';
+
 const SOCIAL_HOST_HINTS = ['facebook.com', 'reddit.com', 'x.com', 'twitter.com', 'youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com'];
 
 export type IntentClass = 'BUYER' | 'SELLER' | 'AMBIGUOUS';
@@ -207,7 +210,7 @@ function uniq<T>(arr: T[]): T[] {
   return [...new Set(arr)];
 }
 
-export async function enrichLead(url: string, title?: string, snippet?: string): Promise<Enrichment> {
+export async function enrichLead(url: string, title?: string, snippet?: string, leadScore?: number): Promise<Enrichment> {
   const baseText = `${title ?? ''}\n${snippet ?? ''}`.trim();
   let pageText: string | undefined;
 
@@ -222,7 +225,39 @@ export async function enrichLead(url: string, title?: string, snippet?: string):
   const combined = `${baseText}\n${pageText ?? ''}`.trim();
   const emails = extractEmails(combined);
   const socials = extractSocials(combined);
-  const verdict = combined.length >= 40 ? classifyIntent(combined) : undefined;
+  let verdict = combined.length >= 40 ? classifyIntent(combined) : undefined;
+
+  const weak =
+    !verdict ||
+    verdict.intentClass === 'AMBIGUOUS' ||
+    verdict.confidence < 0.6 ||
+    !verdict.proofOk ||
+    verdict.roleMismatch;
+
+  const shouldEscalateSmart =
+    (typeof leadScore === 'number' && leadScore >= 75) ||
+    verdict?.intentClass === 'AMBIGUOUS' ||
+    (verdict ? !verdict.proofOk : false);
+
+  if (env.GROQ_API_KEY && combined.length >= 80 && (weak || (typeof leadScore === 'number' && leadScore >= 75))) {
+    try {
+      const mode: 'fast' | 'smart' = shouldEscalateSmart ? 'smart' : 'fast';
+      const llm = await groqClassifyIntent({ text: combined, mode });
+      verdict = {
+        intentClass: llm.intentClass,
+        buyerScore: llm.buyerScore,
+        sellerScore: llm.sellerScore,
+        confidence: llm.confidence,
+        reasons: [...(verdict?.reasons ?? []), 'GROQ', ...llm.reasons],
+        proofLines: llm.proofLines.length ? llm.proofLines : verdict?.proofLines ?? [],
+        proofOk: llm.proofOk,
+        roleMatch: llm.roleMatch,
+        roleMismatch: llm.roleMismatch
+      };
+    } catch {
+      // ignore LLM failure and keep heuristic verdict
+    }
+  }
 
   return { pageText, emails, socials, verdict };
 }

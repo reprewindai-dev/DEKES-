@@ -1,6 +1,6 @@
 import { env } from './env.js';
 import { prisma } from './db.js';
-import { serpApiSearch } from '../lib/serpapi-search.js';
+import { unifiedSearch } from '../lib/search-provider.js';
 import { canonicalizeUrl } from '../lib/url-canonicalization.js';
 import { scoreLead } from '../lib/scoring-engine.js';
 import { pickTemplateWithPropensity, renderTemplate } from '../lib/template-generation.js';
@@ -114,7 +114,7 @@ async function main() {
     };
 
     try {
-      const results = await serpApiSearch(q.query, {
+      const results = await unifiedSearch(q.query, {
         num: env.SEKED_MAX_RESULTS_PER_QUERY,
         gl: env.SERPAPI_GL,
         hl: env.SERPAPI_HL,
@@ -135,7 +135,8 @@ async function main() {
           continue;
         }
 
-        const enrichment = await enrichLead(r.link, r.title, r.snippet);
+        const breakdown = scoreLead({ title: r.title, snippet: r.snippet }, weights);
+        const enrichment = await enrichLead(r.link, r.title, r.snippet, breakdown.score);
 
         const can = canonicalizeUrl(r.link);
         if (can.rejected) {
@@ -157,8 +158,6 @@ async function main() {
           overall.blockedKeyword++;
           continue;
         }
-
-        const breakdown = scoreLead({ title: r.title, snippet: r.snippet }, weights);
 
         const verdict = enrichment.verdict;
         const intentOk = verdict?.intentClass === 'BUYER' && (verdict?.confidence ?? 0) >= 0.45;
