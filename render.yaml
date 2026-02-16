@@ -1,0 +1,102 @@
+services:
+  - type: web
+    name: dekES-dashboard
+    env: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SERPAPI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL_FAST
+        value: llama-3.1-8b-instant
+      - key: GROQ_MODEL_SMART
+        value: llama-3.3-70b-versatile
+      - key: SEARCH_PROVIDER
+        value: serpapi
+      - key: SEARCH_FALLBACK
+        value: ""
+      - key: SERPAPI_GL
+        value: us
+      - key: SERPAPI_HL
+        value: en
+      - key: SERPAPI_NUM
+        value: "10"
+      - key: SEKED_MAX_RUN_QUERIES
+        value: "5"
+      - key: SEKED_MIN_SCORE_QUALIFIED
+        value: "70"
+
+  - type: cron
+    name: dekES-worker
+    env: node
+    plan: starter
+    schedule: "*/60 * * * *"
+    buildCommand: npm ci && npm run build
+    startCommand: npm run worker -- --limitQueries 5 --minScore 70 --printLimit 0
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: DATABASE_URL
+      - key: SERPAPI_API_KEY
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: SERPAPI_API_KEY
+      - key: GROQ_API_KEY
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: GROQ_API_KEY
+      - key: GROQ_MODEL_FAST
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: GROQ_MODEL_FAST
+      - key: GROQ_MODEL_SMART
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: GROQ_MODEL_SMART
+      - key: SEARCH_PROVIDER
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: SEARCH_PROVIDER
+      - key: SEARCH_FALLBACK
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: SEARCH_FALLBACK
+      - key: SERPAPI_GL
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: SERPAPI_GL
+      - key: SERPAPI_HL
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: SERPAPI_HL
+      - key: SERPAPI_NUM
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: SERPAPI_NUM
+      - key: SEKED_MAX_RUN_QUERIES
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: SEKED_MAX_RUN_QUERIES
+      - key: SEKED_MIN_SCORE_QUALIFIED
+        fromService:
+          name: dekES-dashboard
+          type: web
+          envVarKey: SEKED_MIN_SCORE_QUALIFIED

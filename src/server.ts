@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PORT = env.DASHBOARD_PORT ?? 8787;
+const PORT = Number(process.env.PORT ?? '') || env.DASHBOARD_PORT ?? 8787;
 
 function escapeHtml(input: string): string {
   return input
