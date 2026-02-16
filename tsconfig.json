@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "rootDir": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src", "lib", "prisma"],
+  "exclude": ["node_modules", "dist"]
+}
