@@ -294,9 +294,26 @@ app.get('/api/leads', async (req, res) => {
   res.json(leads);
 });
 
-app.listen(PORT, () => {
-  console.log(`dashboard listening on http://localhost:${PORT}`);
-});
+function listenWithFallback(startPort: number) {
+  const server = app.listen(startPort, () => {
+    console.log(`dashboard listening on http://localhost:${startPort}`);
+  });
+
+  server.on('error', (err: any) => {
+    if (err?.code === 'EADDRINUSE') {
+      try {
+        server.close();
+      } catch {
+        // ignore
+      }
+      listenWithFallback(startPort + 1);
+      return;
+    }
+    throw err;
+  });
+}
+
+listenWithFallback(PORT);
 
 process.on('SIGINT', async () => {
   await prisma.$disconnect();
