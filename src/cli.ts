@@ -292,7 +292,12 @@ async function main() {
         await prisma.leadEvent.create({
           data: {
             leadId: created.id,
-            type: created.status === 'OUTREACH_READY' ? 'QUALIFIED' : created.status === 'REVIEW' ? 'UPDATED' : 'REJECTED',
+            type:
+              created.status === 'OUTREACH_READY'
+                ? 'QUALIFIED'
+                : (created.status as any) === 'REVIEW'
+                  ? 'UPDATED'
+                  : 'REJECTED',
             meta: {
               weights,
               breakdown
@@ -343,7 +348,7 @@ async function main() {
   await sanitizeOutreachReadyLeads();
 
   const leads = await prisma.lead.findMany({
-    where: { status: { in: ['OUTREACH_READY', 'REVIEW'] } },
+    where: { status: { in: ['OUTREACH_READY', 'REVIEW'] as any } },
     orderBy: [{ score: 'desc' }, { createdAt: 'desc' }],
     take: printLimit
   });
